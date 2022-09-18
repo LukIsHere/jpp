@@ -16,4 +16,5 @@ int main(){
     db.optimize();
     console.log("zapisane");
     db.backup("tst.txt");
+    db.save();
 }

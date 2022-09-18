@@ -113,12 +113,26 @@
                                         objGet(keyr)->decode("undefined");
                                         keyr = "";
                                         obj = "";
+                                    }else if(i==rawl-2){
+                                        obj+=a;
+                                        reading=false;
+                                        key=true;
+                                        objGet(keyr)->decode("undefined");
+                                        keyr = "";
+                                        obj = "";
                                     }
                                 break;
                                 case t_int:
                                     if(a==','){
                                         reading=false;
-                                        key=false;
+                                        key=true;
+                                        objGet(keyr)->decode(obj);
+                                        keyr = "";
+                                        obj = "";
+                                    }else if(i==rawl-2){
+                                        obj+=a;
+                                        reading=false;
+                                        key=true;
                                         objGet(keyr)->decode(obj);
                                         keyr = "";
                                         obj = "";

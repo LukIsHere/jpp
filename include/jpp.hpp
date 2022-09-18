@@ -199,7 +199,7 @@ namespace jpp{
                 }
             }
             if(idd<id){
-                if(hi==nullptr){
+                if(low==nullptr){
                     low= new root(c->usr);
                 }else{
                     low->add(idd,c);
@@ -211,15 +211,54 @@ namespace jpp{
         public:
             int64_t id = 0;
             std::string name = "";
-            std::string score = 0;
+            int64_t score = 0;
             place(){};
+            place(int64_t idd,int s,std::string n){
+                id = idd;
+                score = s;
+                name = n;
+            };
     };
-    class ranking{
+    class rank{
         public:
             place p[25] = {place()};
-            ranking(){};
-            void add(place p);
-            std::string get();
+            rank(){
+            };
+            void add(place pl){
+                if(pl.score>p[24].score){
+                    for(int i = 0;i<25;i++){
+                        if(p[i].id==pl.id){
+                            p[i]=pl;
+                            place temp;
+                            for(int i = 0;i<24;i++){
+                                if(p[23-i].score<p[24-i].score){
+                                    temp = p[23-i];
+                                    p[23-i] = p[24-i];
+                                    p[24-i] = temp;
+                                }
+                            }
+                            return;
+                        }
+                    }
+                    p[24]=pl;
+                    place temp;
+                    for(int i = 0;i<24;i++){
+                        if(p[23-i].score<p[24-i].score){
+                            temp = p[23-i];
+                            p[23-i] = p[24-i];
+                            p[24-i] = temp;
+                        }
+                    }
+                }
+            };
+            std::string get(){
+                std::string out;
+                for(int i = 0;i<25;i++){
+                    out.append(std::to_string(i+1)+". "+p[i].name+" : "+std::to_string(p[i].score)+"\n");
+                }
+                return out;
+            }
+
     };
     class jsDB{//load/write data to file
         private:
@@ -309,8 +348,12 @@ namespace jpp{
                         dta+=a;
                     }
                 }
-                std::cout << idd << std::endl;
-                add(std::stoll(idd),dta);
+                try{
+                  add(std::stoll(idd),dta);  
+                }catch(...){
+
+                }
+                
             }
             bool exist(int64_t user){
                 if(optimized){
@@ -335,11 +378,23 @@ namespace jpp{
                 }
                 return nullptr;
             }
-            void loop(std::function<void(user)>){
-                //to-do
+            void loop(std::function<void(user*)>  f){
+                chain* p = baseCh;
+                for(int i = 0;i<count;i++){
+                    f(p->usr);
+                    if(p->forward!=nullptr){
+                        p = p->forward;
+                    }
+                }
             };
-            jpp::ranking getTopBy(){//may be slow and only works for first value in json
-                return jpp::ranking();
+            rank getRanking(std::string category){
+                rank out;
+                loop([&out,&category](jpp::user* u){
+                    if(u->data->objExist(category)){
+                        out.add(jpp::place(u->id,u->data->objGet(category)->intGet(),u->data->objGet("name")->strGet()));
+                    }
+                });
+                return out;
             }
     };
     

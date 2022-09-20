@@ -138,6 +138,7 @@ namespace jpp{
             }
             ~chain(){
                 delete usr;
+                delete forward;
             }
 
     };
@@ -205,6 +206,10 @@ namespace jpp{
                     low->add(idd,c);
                 }
             }
+        }
+        ~root(){
+            delete low;
+            delete hi;
         }
     };
     class place{

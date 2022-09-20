@@ -576,6 +576,7 @@
                             if(((objPair**)value)[i]!=nullptr&&((objPair**)value)[i]->key!=""){
                             if (!first)out+=',';
                             out.append('"'+(((objPair**)value)[i]->key)+'"'+':'+(((objPair**)value)[i]->value->raw()));
+                            first = false;
                             }
                         }
                         out += '}';

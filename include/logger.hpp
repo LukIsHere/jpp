@@ -66,11 +66,24 @@ class loading{
 class cnsl{
     public:
         std::string name = "main";
+        std::string last;
         cnsl(std::string n){
             name = n;
         }
         template<class T>
         void log(T c){
+            if(last==std::to_string(c))return;
+            last=std::to_string(c);
+            std::cout << "[" << name << "] " << c << std::endl;
+        }
+        void log(std::string c){
+            if(last==c)return;
+            last=c;
+            std::cout << "[" << name << "] " << c << std::endl;
+        }
+        void log(const char * c){
+            if(last==std::string(c))return;
+            last=std::string(c);
             std::cout << "[" << name << "] " << c << std::endl;
         }
         template<class T>

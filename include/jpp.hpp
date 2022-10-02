@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 #include <functional>
 #include <fstream>
@@ -153,7 +154,9 @@ namespace jpp{
             id = u->id;
         };
         root(chain* r,int64_t l){
-            if(l==1){
+            if(l==0){
+
+            }else if(l==1){
                 id = r->id;
                 usr = r->usr;
             }else if(l==2){

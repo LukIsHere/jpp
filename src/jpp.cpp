@@ -432,6 +432,7 @@
                 return false;
             }
             bool jpp::json::arrInclude(std::string v){
+                setType(t_array);
                 for(int i = 0;i<l;i++){
                     if(((json**)value)[i]->type()==t_string){
                         if(((json**)value)[i]->strGet()==v)return true;
@@ -440,6 +441,7 @@
                 return false;
             };
             bool jpp::json::arrInclude(int64_t v){
+                setType(t_array);
                 for(int i = 0;i<l;i++){
                     if(((json**)value)[i]->type()==t_int){
                         if(((json**)value)[i]->intGet()==v)return true;

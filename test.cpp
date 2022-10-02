@@ -7,14 +7,8 @@
 cnsl console("konsola");
 bool stop = false;
 int main(){
-    jpp::jsDB db("test.txt");
-    db.load();
-    db.optimize();
-    db.get(16)->objGet("hi")->set(10);
-    console.log(db.get(16)->raw());
-    console.log(db.get(76)->raw());
-    db.optimize();
-    console.log("zapisane");
-    db.backup("tst.txt");
-    db.save();
+    jpp::json obj;
+    obj.objGet("hi")->arrInclude(0);
+    obj.objGet("hi")->arrAdd(4);
+    std::cout << obj.raw() << std::endl;
 }

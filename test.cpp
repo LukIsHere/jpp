@@ -7,8 +7,10 @@
 cnsl console("konsola");
 bool stop = false;
 int main(){
-    jpp::json obj;
-    obj.objGet("hi")->arrInclude(0);
-    obj.objGet("hi")->arrAdd(4);
+    jpp::json obj("{\"hi\":[4,false]}");
+    obj["hi"].arrInclude(0);
+    obj["hi"].arrAdd(4);
+    obj["hi"].arrAdd(jpp::json("true"));
+    obj["hi"][4]="hej";
     std::cout << obj.raw() << std::endl;
 }

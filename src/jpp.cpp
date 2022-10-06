@@ -63,6 +63,10 @@
                                     obj+=a;
                                     reading = true;
                                     type = t_undefined;
+                                }else if(a=='t'||a=='f'){
+                                    obj+=a;
+                                    reading = true;
+                                    type = t_bool;
                                 }else if(a!=':'){
                                     obj+=a;
                                     reading = true;
@@ -121,7 +125,25 @@
                                         keyr = "";
                                         obj = "";
                                     }
-                                break;
+                                    break;
+                                case t_bool:
+                                    if(a==','){
+                                        reading=false;
+                                        key=true;
+                                        if(obj=="t")objGet(keyr)->decode("true");
+                                        if(obj=="f")objGet(keyr)->decode("false");
+                                        keyr = "";
+                                        obj = "";
+                                    }else if(i==rawl-2){
+                                        obj+=a;
+                                        reading=false;
+                                        key=true;
+                                        if(obj=="t")objGet(keyr)->decode("true");
+                                        if(obj=="f")objGet(keyr)->decode("false");
+                                        keyr = "";
+                                        obj = "";
+                                    }
+                                    break;
                                 case t_int:
                                     if(a==','){
                                         reading=false;
@@ -176,6 +198,10 @@
                                 obj+=a;//add
                             }else if(a=='u'){//undeffinied
                                 type = t_undefined;
+                                reading = true;
+                                obj+=a;//add
+                            }else if(a=='t'||a=='f'){//undeffinied
+                                type = t_bool;
                                 reading = true;
                                 obj+=a;//add
                             }else if(a==','){
@@ -248,6 +274,22 @@
                                         }
                                     }
                                 break;
+                                case t_bool:
+                                    if(a==','){
+                                        reading = false;
+                                        if(obj=="t")arrGet(item)->decode("true");
+                                        if(obj=="f")arrGet(item)->decode("false");
+                                        obj = "";
+                                        item++;
+                                    }else{
+                                        if(i==rawl-2){
+                                            if(obj=="t")arrGet(item)->decode("true");
+                                            if(obj=="f")arrGet(item)->decode("false");
+                                            obj = "";
+                                            item++;
+                                        }
+                                    }
+                                break;
                             }
                         }
                     }
@@ -260,9 +302,15 @@
                     }
                     set(out);
                 }else if(start>47&&start<58){//number
-                    set(stoll(raw));
+                    set(int64_t(stoll(raw)));
                 }else if(raw=="undefined"){//undefined
                     setType(t_undefined);
+                }else if(raw=="true"){//undefined
+                    setType(t_bool);
+
+                }else if(raw=="false"){//undefined
+                    setType(t_bool);
+
                 }else{
                     std::string out;
                     for (int i = 0; i < raw.length(); i++)
@@ -283,12 +331,14 @@
                         oov = true;
                         fos = true;
                         deffined = true;
+                        b = false;
                         break;
                     case t_string:
                         value = new std::string;
                         oov = true;
                         fos = false;
                         deffined = true;
+                        b = false;
                         break;
                     case t_array:
                         l = 1;
@@ -297,6 +347,7 @@
                         oov = false;
                         fos = true;
                         deffined = true;
+                        b = false;
                         break;
                     case t_object:
                         l = 1;
@@ -305,7 +356,14 @@
                         oov = false;
                         fos = false;
                         deffined = true;
+                        b = false;
                         break;
+                    case  t_bool:
+                        value = new bool(false);
+                        oov = true;
+                        fos = true;
+                        deffined = true;
+                        b = true;
                     default:
                         deffined = false;
                     }
@@ -339,6 +397,7 @@
                 value = newobj;
             }
             void jpp::json::removeValue(){
+                b = false;
                 switch (type())
                     {
                     case t_int:
@@ -346,6 +405,9 @@
                         break;
                     case t_string:
                         delete (std::string*)value;
+                        break;
+                    case t_bool:
+                        delete (bool*)value;
                         break;
                     case t_array:
                         for(int i = 0;i<l;i++){
@@ -411,9 +473,33 @@
             jpp::json::json(int type){
                 setType(type);
             }
+            jpp::json& jpp::json::operator[](int i){
+                return *arrGet(i);
+            };
+            jpp::json& jpp::json::operator[](std::string i){
+                return *objGet(i);
+            };
+            void jpp::json::operator=(std::string i){
+                set(i);
+            };
+            void jpp::json::operator=(const char* i){
+                set(std::string(i));
+            };
+            void jpp::json::operator=(int i){
+                set(i);
+            };
+            void jpp::json::operator=(int64_t i){
+                set(i);
+            };
+            void jpp::json::operator=(bool i){
+                set(i);
+            };
+            void jpp::json::operator=(json i){
+                set(i);
+            };
             //check
             int jpp::json::type(){
-
+                if(b)return t_bool;
                 if(!deffined)return t_undefined;
                 if(oov&&fos)return t_int;
                 if(oov&&!fos)return t_string;
@@ -491,6 +577,10 @@
                     setType(t_int);
                     return *((int64_t*)value);
                 };
+                bool jpp::json::boolGet(){
+                    setType(t_bool);
+                    return (bool*)value;
+                };
                 std::string jpp::json::to_string(){
                     switch (type())
                     {
@@ -527,6 +617,14 @@
                 void jpp::json::set(int64_t v){
                     setType(t_int);
                     (*(int64_t*)value) = v;
+                };
+                void jpp::json::set(int v){
+                    setType(t_int);
+                    (*(int64_t*)value) = v;
+                };
+                void jpp::json::set(bool v){
+                    setType(t_bool);
+                    (*(bool*)value) = v;
                 };
                 void jpp::json::set(json v){
                     decode(v.raw());
@@ -583,7 +681,12 @@
                         }
                         out += '}';
                         return out;
-                        }break;
+                        }
+                        break;
+                        case t_bool:
+                            if(boolGet())return "true";
+                            else return "false";
+                    
                     }
                     return "undefined";
             };

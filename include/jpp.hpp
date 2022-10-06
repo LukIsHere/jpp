@@ -1,23 +1,32 @@
 #pragma once
+#include "Smutex.hpp"
 #include <string>
 #include <functional>
 #include <fstream>
 #include <iostream>
 #include <thread>
+
+typedef std::shared_mutex Lock;
+typedef std::unique_lock<Lock> WriteLock;
+typedef std::shared_lock<Lock> ReadLock;
+
 #define t_undefined 0
 #define t_object 1
 #define t_array 2
 #define t_string 3
 #define t_int 4
+#define t_bool 5
 
 namespace jpp{
 
     
     class json{
         private:
+            //to-do mutex maybe
             bool deffined = false;
             bool oov = false;//f obj or t value
             bool fos = false;//ff object or ft array   or   tf string or ttint
+            bool b = false;
             void* value = nullptr;
             int l = 1;
             void setType(int t);
@@ -30,6 +39,16 @@ namespace jpp{
             json(std::string raw,bool IKnowWhatImDoing=false);
             json(int64_t v);
             json(int type);
+            //operators
+            json& operator[](int i);
+            json& operator[](std::string i);
+            void operator=(std::string i);
+            void operator=(const char* i);
+            void operator=(int i);
+            void operator=(int64_t i);
+            void operator=(bool i);
+            void operator=(json i);
+            //decoding
             void decode(std::string raw);
             //check
             int type();
@@ -52,10 +71,14 @@ namespace jpp{
                 //string
                 std::string* strGetP();
                 std::string strGet();
+                //bool
+                bool boolGet();
             //set
                 void set(std::string v);
                 void set(int64_t v);
+                void set(int v);
                 void set(json v);
+                void set(bool v);
                 void arrAdd(json v);
                 void arrAdd(std::string v);
                 void arrAdd(int64_t v);
@@ -230,6 +253,11 @@ namespace jpp{
     class rank{
         public:
             place p[25] = {place()};
+            rank(json in){
+                for(int i = 0;i<25;i++){
+                    add(place(in[i]["id"].intGet(),in[i]["s"].intGet(),in[i]["name"].strGet()));
+                }
+            }
             rank(){
             };
             void add(place pl){
@@ -259,6 +287,15 @@ namespace jpp{
                     }
                 }
             };
+            jpp::json expo(){
+                jpp::json out;
+                for(int i = 0;i<25;i++){
+                    out[i].objGet("s")->set(p[i].score);
+                    out[i].objGet("id")->set(p[i].id);
+                    out[i].objGet("name")->set(p[i].name);
+                }
+                return out;
+            }
             std::string get(){
                 std::string out;
                 for(int i = 0;i<25;i++){
@@ -270,6 +307,7 @@ namespace jpp{
     };
     class jsDB{//load/write data to file
         private:
+            Lock mutex;
             std::string path = "default.txt";
             bool optimized = false;
             chain* baseCh = nullptr;
@@ -302,24 +340,28 @@ namespace jpp{
                 
             }
             void save(){//save data to file
+                WriteLock lock(mutex);
                 std::ofstream file(path);
                 file.clear();
                 file << baseCh->rawCh();
                 file.close();
             }
             void backup(std::string p){//save backup data to patch
+                WriteLock lock(mutex);
                 std::ofstream file(p);
                 file.clear();
                 file << baseCh->rawCh();
                 file.close();
             }
             void optimize(){//optimize the tree for faster searching(might take a moment depending on size)
+                WriteLock lock(mutex);
                 optimized = false;
                 delete baseRoot;
                 baseRoot = new root(baseCh,count);
                 optimized = true;
             }
             void add(int64_t user,std::string raw){
+                WriteLock lock(mutex);
                 if(baseCh==nullptr){
                     baseCh=new chain(user,raw);
                     count++;
@@ -338,6 +380,7 @@ namespace jpp{
                 }
             }
             void add(std::string rawu){
+                WriteLock lock(mutex);
                 int64_t rawul = rawu.length();
                 std::string idd;
                 std::string dta;
@@ -356,6 +399,7 @@ namespace jpp{
                         dta+=a;
                     }
                 }
+                lock.unlock();
                 try{
                   add(std::stoll(idd),dta);  
                 }catch(...){
@@ -364,6 +408,7 @@ namespace jpp{
                 
             }
             bool exist(int64_t user){
+                ReadLock lock(mutex);
                 if(optimized){
                     return(baseRoot->get(user)!=nullptr);
                 }else{
@@ -377,16 +422,19 @@ namespace jpp{
                     if(!exist(user)){
                         add(user,"{}");
                     }
+                    ReadLock lock(mutex);
                     return baseRoot->get(user)->data;
                 }else{
                     if(!exist(user)){
                         add(user,"{}");
                     };
+                    ReadLock lock(mutex);
                     return baseCh->get(user)->usr->data;
                 }
                 return nullptr;
             }
             void loop(std::function<void(user*)>  f){
+                ReadLock lock(mutex);
                 chain* p = baseCh;
                 for(int i = 0;i<count;i++){
                     f(p->usr);

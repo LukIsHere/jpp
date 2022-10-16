@@ -343,14 +343,14 @@ namespace jpp{
                 WriteLock lock(mutex);
                 std::ofstream file(path);
                 file.clear();
-                file << baseCh->rawCh();
+                if(baseCh!=nullptr)file << baseCh->rawCh();
                 file.close();
             }
             void backup(std::string p){//save backup data to patch
                 WriteLock lock(mutex);
                 std::ofstream file(p);
                 file.clear();
-                file << baseCh->rawCh();
+                if(baseCh!=nullptr)file << baseCh->rawCh();
                 file.close();
             }
             void optimize(){//optimize the tree for faster searching(might take a moment depending on size)

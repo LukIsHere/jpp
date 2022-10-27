@@ -25,7 +25,7 @@
                     std::string keyr;
                     std::string obj;
                     int64_t rawl = raw.length();
-                    for(int i = 1;i<rawl-1;i++){
+                    for(int i = 1;i<rawl;i++){
                         a = raw.at(i);
                         if(key){
                             if(!reading){
@@ -64,7 +64,7 @@
                                     reading = true;
                                     type = t_undefined;
                                 }else if(a=='t'||a=='f'){
-                                    obj+=a;
+                                    obj = a;
                                     reading = true;
                                     type = t_bool;
                                 }else if(a!=':'){
@@ -127,19 +127,19 @@
                                     }
                                     break;
                                 case t_bool:
+                                
                                     if(a==','){
                                         reading=false;
                                         key=true;
-                                        if(obj=="t")objGet(keyr)->decode("true");
-                                        if(obj=="f")objGet(keyr)->decode("false");
+                                        if(obj=="t")objGet(keyr)->set(true);
+                                        if(obj=="f")objGet(keyr)->set(false);
                                         keyr = "";
                                         obj = "";
-                                    }else if(i==rawl-2){
-                                        obj+=a;
+                                    }else if(a=='}'){
                                         reading=false;
                                         key=true;
-                                        if(obj=="t")objGet(keyr)->decode("true");
-                                        if(obj=="f")objGet(keyr)->decode("false");
+                                        if(obj=="t")objGet(keyr)->set(true);
+                                        else if(obj=="f")objGet(keyr)->set(false);
                                         keyr = "";
                                         obj = "";
                                     }
@@ -151,8 +151,7 @@
                                         objGet(keyr)->decode(obj);
                                         keyr = "";
                                         obj = "";
-                                    }else if(i==rawl-2){
-                                        obj+=a;
+                                    }else if(a=='}'){
                                         reading=false;
                                         key=true;
                                         objGet(keyr)->decode(obj);
@@ -306,11 +305,9 @@
                 }else if(raw=="undefined"){//undefined
                     setType(t_undefined);
                 }else if(raw=="true"){//undefined
-                    setType(t_bool);
-
+                    set(true);
                 }else if(raw=="false"){//undefined
-                    setType(t_bool);
-
+                    set(false);
                 }else{
                     std::string out;
                     for (int i = 0; i < raw.length(); i++)
@@ -321,7 +318,7 @@
             }
             void jpp::json::setType(int t){
 
-                if(t!=type()){
+                if(t!=type()||value==nullptr){
                     removeValue();
                     deffined = false;
                     switch (t)
@@ -397,6 +394,7 @@
                 value = newobj;
             }
             void jpp::json::removeValue(){
+                if(value==nullptr)return;
                 b = false;
                 switch (type())
                     {
@@ -579,7 +577,7 @@
                 };
                 bool jpp::json::boolGet(){
                     setType(t_bool);
-                    return (bool*)value;
+                    return *((bool*)value);
                 };
                 std::string jpp::json::to_string(){
                     switch (type())
@@ -624,7 +622,7 @@
                 };
                 void jpp::json::set(bool v){
                     setType(t_bool);
-                    (*(bool*)value) = v;
+                    *((bool*)value) = v;
                 };
                 void jpp::json::set(json v){
                     decode(v.raw());

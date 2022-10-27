@@ -6,7 +6,7 @@
 #include <iostream>
 #include <thread>
 
-typedef std::shared_mutex Lock;
+typedef std::shared_timed_mutex Lock;
 typedef std::unique_lock<Lock> WriteLock;
 typedef std::shared_lock<Lock> ReadLock;
 

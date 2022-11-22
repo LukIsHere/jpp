@@ -337,6 +337,7 @@ namespace jpp{
                         u+=na;
                     }
                 }
+                file.close();
                 
             }
             void save(){//save data to file
